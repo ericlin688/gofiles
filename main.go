@@ -25,20 +25,25 @@ type d struct {
 }
 
 var (
-	particles []particle         //see struct above
-	k         float64    = 0.01  //spring constant of particle interaction
-	ar        float64    = 0.005 //drag coefficient
-	n         int        = 10    //number of particles
-	minrange  float64    = 50    //inside of this range, particles repel one another
-	distance  d                  //see struct above
-	ca        = [3]color.Color{
+	particles []particle        //see struct above
+	k         float64    = 0.03 //spring constant of particle interaction
+	kw        float64    = 0.4  //Spring coefficient of the walls
+	ar        float64    = 0.01 //drag coefficient
+	n         int        = 200  //number of particles
+	minrange  float64    = 50   //inside of this range, particles repel one another
+	distance  d                 //see struct above
+	ca        = [5]color.Color{
 		color.RGBA{R: 255, A: 255},
 		color.RGBA{G: 255, A: 255},
-		color.RGBA{B: 255, A: 255}} //array of possible particle colors
-	cm = [3][3]float64{
-		{-0.02, -0.01, 0.01},  //r2r,r2g,r2b
-		{0.01, -0.02, -0.01},  //g2r,g2g,g2b
-		{-0.01, -0.03, -0.01}} //b2r,b2g,b2b
+		color.RGBA{B: 255, A: 255},
+		color.RGBA{R: 255, G: 255, B: 255, A: 255},
+		color.RGBA{R: 255, G: 100, B: 255, A: 255}} //array of possible particle colors
+	cm = [5][5]float64{
+		{-0.02, -0.01, 0.01, -0.01, 0.01}, //r2r,r2g,r2b,r2w,r2p
+		{0.01, -0.02, -0.01, 0.01, -0.01}, //g2r,g2g,g2b,g2w,g2p
+		{-0.01, 0.01, -0.02, -0.01, 0.01}, //b2r,b2g,b2b,b2w,b2p
+		{0.01, -0.01, 0.01, -0.02, -0.01}, //w2r,w2g,w2b,w2w,w2p
+		{-0.01, 0.01, -0.01, 0.01, -0.02}} //p2r,p2g,p2b,p2w,p2p
 )
 
 func main() {
@@ -85,15 +90,16 @@ func draw() {
 		////
 		p.vx += -ar * math.Pow(p.vx, 2) * (math.Abs(p.vx) / p.vx)
 		p.vy += -ar * math.Pow(p.vy, 2) * (math.Abs(p.vy) / p.vy)
+		//reflecting off walls
 		if p.y < 0 {
-			p.vy += k * (-p.y)
+			p.vy += kw * (-p.y)
 		} else if p.y > 1080 {
-			p.vy += k * (1080 - p.y)
+			p.vy += kw * (1080 - p.y)
 		}
 		if p.x < 0 {
-			p.vx += k * (-p.x)
+			p.vx += kw * (-p.x)
 		} else if p.x > 1920 {
-			p.vx += k * (1920 - p.x)
+			p.vx += kw * (1920 - p.x)
 		}
 		p.x += p.vx
 		p.y += p.vy
@@ -110,7 +116,7 @@ func Newparticle(x float64, y float64, vx float64, vy float64, c color.Color, cc
 func Makeparticles(n int) []particle {
 	particles := make([]particle, n)
 	for i := 0; i < n; i++ {
-		r := rand.Intn(3)
+		r := rand.Intn(5)
 		particles[i] = Newparticle(rand.Float64()*1920, rand.Float64()*1080, 2.5-rand.Float64()*5, 2.5-rand.Float64()*5, ca[r], r)
 	}
 	return particles
